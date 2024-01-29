@@ -57,25 +57,39 @@ app.get('/products', async (req, res) => {
   });
   
   // สร้างคำสั่งซื้อใหม่
-app.post('/orders', async (req, res) => {
-    const { userId, products } = req.body; 
-    const order = await prisma.order.create({
-      data: {
-        userId,
-        date: new Date(),
-        totalAmount: 0, 
-        shippingAddress: {}, 
-        orderDetails: {
-          create: products.map((p) => ({
-            productId: p.productId,
-            quantity: p.quantity,
-            price: 0, 
-          })),
+  app.post('/orders', async (req, res) => {
+    const { userId, products, shippingAddressId } = req.body;
+  
+    const totalAmount = products.reduce((total, product) => total + product.price * product.quantity, 0);
+  
+    try {
+      const order = await prisma.order.create({
+        data: {
+          userId: userId,
+          date: new Date(),
+          totalAmount: totalAmount,
+          shippingAddressId: shippingAddressId, // Use the existing ShippingAddress ID
+          orderDetails: {
+            create: products.map((product) => ({
+              productId: product.productId,
+              quantity: product.quantity,
+              price: product.price,
+            })),
+          },
         },
-      },
-    });
-    res.json(order);
+      });
+  
+      res.json(order);
+    } catch (error) {
+      console.error("Failed to create order:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
   });
+  
+  
+  
+  
+  
   
   // ดึงรายการคำสั่งซื้อทั้งหมด
   app.get('/orders', async (req, res) => {
