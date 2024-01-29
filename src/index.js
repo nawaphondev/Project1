@@ -87,10 +87,6 @@ app.get('/products', async (req, res) => {
   });
   
   
-  
-  
-  
-  
   // ดึงรายการคำสั่งซื้อทั้งหมด
   app.get('/orders', async (req, res) => {
     const orders = await prisma.order.findMany({
