@@ -11,35 +11,44 @@ datasource db {
 }
 
 model User {
-  id                Int               @id @default(autoincrement())
+  id                Int                  @id @default(autoincrement())
   username          String
   password          String
-  email             String
+  email             String               @unique
   role              String
-  createdAt         DateTime          @default(now())
-  orders            Order[]
+  createdAt         DateTime             @default(now())
   shippingAddresses ShippingAddress[]
+  orders            Order[]
 }
 
-model Product {
-  id            Int           @id @default(autoincrement())
-  name          String
-  description   String?
-  price         Float
-  stockQuantity Int
-  imageUrl      String?
-  orderDetails  OrderDetail[]
+model ShippingAddress {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  address   String
+  district  String
+  province  String
+  zipCode   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Order {
-  id                Int             @id @default(autoincrement())
-  userId            Int
-  date              DateTime        @default(now())
-  totalAmount       Float
-  shippingAddress   ShippingAddress @relation(fields: [shippingAddressId], references: [id], onDelete: Cascade,onUpdate: Cascade)
-  orderDetails      OrderDetail[]
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade,onUpdate: Cascade)
-  shippingAddressId Int             @unique
+  id               Int            @id @default(autoincrement())
+  userId           Int
+  orderDate        DateTime
+  shippingAddress  String
+  totalAmount      Float
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orderDetails     OrderDetail[]
+}
+
+model Product {
+  id           Int           @id @default(autoincrement())
+  name         String
+  description  String?
+  price        Float
+  stockQuantity Int
+  imageUrl     String?
+  orderDetails OrderDetail[]
 }
 
 model OrderDetail {
@@ -48,18 +57,7 @@ model OrderDetail {
   productId Int
   quantity  Int
   price     Float
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade,onUpdate: Cascade)
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade,onUpdate: Cascade)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
-model ShippingAddress {
-  id      Int    @id @default(autoincrement())
-  userId  Int
-  address String
-  city    String
-  state   String
-  zipCode String
-  country String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade,onUpdate: Cascade)
-  order   Order?
-}
