@@ -10,45 +10,67 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserType {
+  CUSTOMER
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 model User {
-  id                Int                  @id @default(autoincrement())
-  username          String
+  id                Int               @id @default(autoincrement())
+  username          String            @unique
   password          String
-  email             String               @unique
-  role              String
-  createdAt         DateTime             @default(now())
-  shippingAddresses ShippingAddress[]
+  email             String?           @unique
+  phoneNumber       String
+  userType          UserType
   orders            Order[]
-}
-
-model ShippingAddress {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  address   String
-  district  String
-  province  String
-  zipCode   String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-}
-
-model Order {
-  id               Int            @id @default(autoincrement())
-  userId           Int
-  orderDate        DateTime
-  shippingAddress  String
-  totalAmount      Float
-  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  orderDetails     OrderDetail[]
+  shippingAddresses ShippingAddress[]
+  paymentMethods    PaymentMethod[]
+  shoppingCart      ShoppingCart[]
 }
 
 model Product {
-  id           Int           @id @default(autoincrement())
+  id           Int            @id @default(autoincrement())
   name         String
+  productImg   String
   description  String?
+  color        String
+  capacity     String
   price        Float
-  stockQuantity Int
-  imageUrl     String?
+  stock        Int
   orderDetails OrderDetail[]
+  shoppingCart ShoppingCart[]
+}
+
+model ShoppingCart {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int
+  user      User    @relation(fields: [userId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id           Int           @id @default(autoincrement())
+  userId       Int
+  orderDate    DateTime      @default(now())
+  status       OrderStatus
+  user         User          @relation(fields: [userId], references: [id])
+  orderDetails OrderDetail[]
+  payments     Payment[]
 }
 
 model OrderDetail {
@@ -57,6 +79,34 @@ model OrderDetail {
   productId Int
   quantity  Int
   price     Float
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id          Int           @id @default(autoincrement())
+  orderId     Int
+  paymentDate DateTime      @default(now())
+  amount      Float
+  method      String
+  status      PaymentStatus
+  order       Order         @relation(fields: [orderId], references: [id])
+}
+
+model PaymentMethod {
+  id      Int  @id @default(autoincrement())
+  userId  Int
+  details Json
+  user    User @relation(fields: [userId], references: [id])
+}
+
+model ShippingAddress {
+  id          Int    @id @default(autoincrement())
+  userId      Int
+  address     String
+  subdistrict String
+  district    String
+  province    String
+  postalCode  String
+  user        User   @relation(fields: [userId], references: [id])
 }
